@@ -27,9 +27,22 @@ type NetworkProfileSpec struct {
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="LoadBalancerClass is immutable"
 	LoadBalancerClass *string `json:"loadBalancerClass,omitempty"`
-	// Address where API server of will be exposed.
-	// In case of LoadBalancer Service, this can be empty in order to use the exposed IP provided by the cloud controller manager.
-	Address string `json:"address,omitempty"`
+
+	// Endpoint is the desired endpoint of the Tenant Control Plane.
+	//
+	// Example: https://tenant-control-plane.example.com/{tenant-id}
+	//          https://{tenant-id}.example.com:6443
+	//
+	// {tenant-id} is the unique identifier of the tenant, and will
+	// be used to generate the endpoint.
+	//
+	// TODO: What does it mean to change it? How can we avoid down time:
+	// 			Create a second route/ingress, update the certs and switch?
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="Endpoint is immutable"
+	Endpoint string `json:"endpoint,omitempty"`
+
 	// The default domain name used for DNS resolution within the cluster.
 	//+kubebuilder:default="cluster.local"
 	//+kubebuilder:validation:XValidation:rule="self == oldSelf",message="changing the cluster domain is not supported"
@@ -141,9 +154,6 @@ type ControlPlane struct {
 type IngressSpec struct {
 	AdditionalMetadata AdditionalMetadata `json:"additionalMetadata,omitempty"`
 	IngressClassName   string             `json:"ingressClassName,omitempty"`
-	// Hostname is an optional field which will be used as Ingress's Host. If it is not defined,
-	// Ingress's host will be "<tenant>.<namespace>.<domain>", where domain is specified under NetworkProfileSpec
-	Hostname string `json:"hostname,omitempty"`
 }
 
 // GatewayRouteSpec defines the options for the Gateway which will expose API Server of the Tenant Control Plane.
@@ -153,8 +163,6 @@ type GatewayRouteSpec struct {
 
 	// GatewayParentRefs is the class of the Gateway resource to use.
 	GatewayParentRefs []gatewayv1.ParentReference `json:"parentRefs,omitempty"`
-
-	Hostnames []gatewayv1.Hostname `json:"hostnames,omitempty"`
 }
 
 type ControlPlaneComponentsResources struct {
@@ -245,6 +253,11 @@ type ServiceSpec struct {
 	AdditionalPorts []AdditionalPort `json:"additionalPorts,omitempty"`
 	// ServiceType allows specifying how to expose the Tenant Control Plane.
 	ServiceType ServiceType `json:"serviceType"`
+
+	// TODO: Requested address. Will be loadBalancerIP or clusterIP depending on type
+	Address string `json:"address,omitempty"`
+
+	// TODO: Alternative, use loadBalancerIP & clusterIP ?
 }
 
 // AddonSpec defines the spec for every addon.

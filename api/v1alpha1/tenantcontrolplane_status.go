@@ -175,11 +175,42 @@ type TenantControlPlaneStatus struct {
 	KubeadmConfig KubeadmConfigStatus `json:"kubeadmconfig,omitempty"`
 	// KubeadmPhase contains the status of the kubeadm phases action
 	KubeadmPhase KubeadmPhasesStatus `json:"kubeadmPhase,omitempty"`
-	// ControlPlaneEndpoint contains the status of the kubernetes control plane
-	ControlPlaneEndpoint string `json:"controlPlaneEndpoint,omitempty"`
+
+	// TODO: Endpoint contains the generate endpoint of the control plane.
+	// Example: https://123.0.0.1:6443/foo
+	// Example: https://tenant123.example.com:6443
+	// Example: https://foo.example.com:6443/bar/tenant123
+	Endpoint string `json:"endpoint,omitempty"`
+	// TODO: Address contains the address of the control plane.
+	// Example: 123.0.0.1
+	Address string `json:"address,omitempty"`
+
+	// TODO: Conditions of the tenant.
+	Conditions []metav1.Condition `json:conditions,omitempty`
+
 	// Addons contains the status of the different Addons
 	Addons AddonsStatus `json:"addons,omitempty"`
 }
+
+type TenantControlPlaneConditionType string
+
+// TODO: Finalize.
+const (
+	Ready TenantControlPlaneConditionType = "Ready"
+
+	// Example:
+	// type: "EndpointReady"
+	// status: "False"
+	// reason: "GatewayNotFound"
+	// message: "Gateway class 'foo' not found in namespace 'bar'"
+	//
+	// type: "EndpointReady"
+	// status: "True"
+	// reason: "GatewayReady"
+	// message: "Gateway '' with ip '' accepted the "
+	EndpointReady TenantControlPlaneConditionType = "EndpointReady"
+	ServiceReady  TenantControlPlaneConditionType = "ServiceReady"
+)
 
 // KubernetesStatus defines the status of the resources deployed in the management cluster,
 // such as Deployment and Service.
